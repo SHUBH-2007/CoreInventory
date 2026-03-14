@@ -2,10 +2,16 @@ const jwt = require("jsonwebtoken")
 const JWT_SECRET = "hackathon_secret_key"
 const express = require("express")
 const cors = require("cors")
+const productRoutes = require("./routes/productRoutes");
+const authRoutes = require("./routes/authRoutes")
+const stockRoutes = require("./routes/stockRoutes");
+const inventoryRoutes = require("./routes/inventoryRoutes");
+
+const locationRoutes = require("./routes/locationRoutes");
 
 require("./db/initDB")
 
-const authRoutes = require("./routes/authRoutes")
+
 
 const app = express()
 
@@ -13,6 +19,11 @@ app.use(cors())
 app.use(express.json())
 
 app.use("/auth", authRoutes)
+app.use("/products", productRoutes);
+app.use("/stock", stockRoutes);
+app.use("/locations", locationRoutes);
+app.use("/inventory", inventoryRoutes);
+
 
 app.use((err, req, res, next) => {
   console.error("Server Error:", err)
