@@ -5,6 +5,8 @@ const db = require("../db/database");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 const JWT_SECRET = "hackathon_secret_key";
+const sendOTP = require("../services/emailService")
+const generateOTP = require("../utils/generateOTP")
 
 router.post(
   "/signup",
@@ -116,5 +118,64 @@ router.post(
     });
   },
 );
+
+router.post("/send-otp", (req, res) => {
+
+  const { email } = req.body
+
+  const otp = generateOTP()
+
+  const expiry = Date.now() + 5 * 60 * 1000
+
+  db.run(
+    "UPDATE users SET otp=?, otp_expiry=? WHERE email=?",
+    [otp, expiry, email],
+    async (err) => {
+
+      if (err) {
+        return res.status(500).json({ error: err.message })
+      }
+
+      await sendOTP(email, otp)
+
+      res.json({
+        message: "OTP sent to email"
+      })
+    }
+  )
+})
+
+router.post("/verify-otp", (req, res) => {
+
+  const { email, otp } = req.body
+
+  db.get(
+    "SELECT * FROM users WHERE email=?",
+    [email],
+    (err, user) => {
+
+      if (err) {
+        return res.status(500).json({ error: err.message })
+      }
+
+      if (!user) {
+        return res.status(400).json({ message: "User not found" })
+      }
+
+      if (user.otp !== otp) {
+        return res.status(400).json({ message: "Invalid OTP" })
+      }
+
+      if (Date.now() > user.otp_expiry) {
+        return res.status(400).json({ message: "OTP expired" })
+      }
+
+      res.json({
+        message: "OTP verified successfully"
+      })
+
+    }
+  )
+})
 
 module.exports = router;
