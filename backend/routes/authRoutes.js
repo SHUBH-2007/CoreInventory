@@ -1,10 +1,10 @@
 const express = require("express");
 const { body, validationResult } = require("express-validator");
 const bcrypt = require("bcrypt");
-
 const db = require("../db/database");
-
 const router = express.Router();
+const jwt = require("jsonwebtoken");
+const JWT_SECRET = "hackathon_secret_key";
 
 router.post(
   "/signup",
@@ -104,9 +104,13 @@ router.post(
           });
         }
 
+        const token = jwt.sign({ user_id: user.user_id }, JWT_SECRET, {
+          expiresIn: "2h",
+        });
+
         res.json({
           message: "Login successful",
-          user_id: user.user_id,
+          token: token,
         });
       });
     });

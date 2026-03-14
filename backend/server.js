@@ -1,3 +1,5 @@
+const jwt = require("jsonwebtoken")
+const JWT_SECRET = "hackathon_secret_key"
 const express = require("express")
 const cors = require("cors")
 
