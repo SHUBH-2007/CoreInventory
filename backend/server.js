@@ -12,6 +12,16 @@ app.use(express.json())
 
 app.use("/auth", authRoutes)
 
+app.use((err, req, res, next) => {
+  console.error("Server Error:", err)
+
+  res.status(500).json({
+    message: "Internal Server Error",
+    error: err.message
+  })
+})
+
+
 app.get("/", (req, res) => {
   res.send("CoreInventory Backend Running")
 })
