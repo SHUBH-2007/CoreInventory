@@ -171,11 +171,73 @@ router.post("/verify-otp", (req, res) => {
       }
 
       res.json({
-        message: "OTP verified successfully"
+        message: "OTP verified"
       })
 
     }
   )
+
+})
+router.post("/reset-password", async (req, res) => {
+
+  const { email, newPassword } = req.body
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10)
+
+  db.run(
+    "UPDATE users SET password=? WHERE email=?",
+    [hashedPassword, email],
+    function(err) {
+
+      if (err) {
+        return res.status(500).json({ error: err.message })
+      }
+
+      res.json({
+        message: "Password reset successful"
+      })
+
+    }
+  )
+
+})
+
+router.post("/forgot-password", (req, res) => {
+
+  const { email } = req.body
+
+  const otp = generateOTP()
+  const expiry = Date.now() + 5 * 60 * 1000
+
+  db.get(
+    "SELECT * FROM users WHERE email=?",
+    [email],
+    async (err, user) => {
+
+      if (err) {
+        return res.status(500).json({ error: err.message })
+      }
+
+      if (!user) {
+        return res.status(400).json({ message: "User not found" })
+      }
+
+      db.run(
+        "UPDATE users SET otp=?, otp_expiry=? WHERE email=?",
+        [otp, expiry, email]
+      )
+
+      console.log("OTP:", otp)
+
+      await sendOTP(email, otp)
+
+      res.json({
+        message: "OTP sent to email"
+      })
+
+    }
+  )
+
 })
 
 module.exports = router;
